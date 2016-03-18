@@ -2,10 +2,13 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <regex.h>
-
+//#define DEMO_FILE "simple.c"
+#define DEMO_FILE "huge.c"
 #include "t.h"
 #define DEMO_SEARCH 11
 #define DEBUG_SEARCH 0
+#define DEUBG_MAKE_TREE 0
+#define MAX_START_LEVEL 10 /// 预处理命令最大深度.
 int main(void)
 {
 	CLOG_INFO("start");
@@ -16,7 +19,7 @@ int main(void)
 	int n = 0;
 	int ret_regcomp;
 	int ret_regexec;
-	fp = fopen("simple.c", "r");
+	fp = fopen(DEMO_FILE, "r");
 	if (fp==NULL) {
 		return -1;
 	}
@@ -24,7 +27,7 @@ int main(void)
 	regex_t regex_if;
 	regex_t regex_else;
 	regex_t regex_endif;
-	int search_num=0;
+	int search_num = 0;
 	/* Compile regular expression */
 	ret_regcomp = regcomp(&regex_if, "\\s*#\\s*if.*$", 0);
 	if (ret_regcomp) {
@@ -34,12 +37,12 @@ int main(void)
 	ret_regcomp = regcomp(&regex_else, "\\s*#\\s*el.*$", 0);
 	if (ret_regcomp) {
 		CLOG_ERR("Could not compile regex\n");
-		return(1);
+		return (1);
 	}
 	ret_regcomp = regcomp(&regex_endif, "\\s*#\\s*endif.*$", 0);
 	if (ret_regcomp) {
 		CLOG_ERR("Could not compile regex\n");
-		return(1);
+		return (1);
 	}
 	Node* cnode = root;
 	Node* hnode[10] = { NULL };
@@ -50,26 +53,39 @@ int main(void)
 		/* Execute regular expression */
 		ret_regexec = regexec(&regex_if, line, 0, NULL, 0);
 		if (!ret_regexec) {
+#if DEUBG_MAKE_TREE
 			CLOG_INFO("找到if [%d] %d, \"%s\"", level+1, n, line);
+#endif
 			cnode = create_add_child(cnode, n, 0);
+#if DEUBG_MAKE_TREE
 			ptree(root);
+#endif
 			hnode[level] = cnode;
 			level++;
+			if(level>)
 		}
 		ret_regexec = regexec(&regex_else, line, 0, NULL, 0);
 		if (!ret_regexec) {
+#if DEUBG_MAKE_TREE
 			CLOG_INFO("找到else [%d] %d, \"%s\"", level, n, line);
+#endif
 			cnode = create_add_next(cnode, n, 0);
+#if DEUBG_MAKE_TREE
 			ptree(root);
+#endif
 		}
 		ret_regexec = regexec(&regex_endif, line, 0, NULL, 0);
 		if (!ret_regexec) {
+#if DEUBG_MAKE_TREE
 			CLOG_INFO("找到endif [%d] %d, \"%s\"", level, n, line);
+#endif
 			level--;
 			cnode = hnode[level];
 			create_add_next(cnode, n, 0);
 			fill_max(cnode, n);
+#if DEUBG_MAKE_TREE
 			ptree(root);
+#endif
 
 		}
 	}
@@ -87,16 +103,17 @@ int main(void)
 	Node* n32 = create_add_next(n31, 12, 12);
 #endif
 	CLOG_WARN("打印树");
+#if DEUBG_MAKE_TREE
 	ptree(root);
+#endif
 	CLOG_INFO("search");
 	CLOG_WARN("start search %d", DEMO_SEARCH);
 	tree_search(root, root, DEMO_SEARCH);
-	while(1){
-		CLOG_INFO("Input search num:0~%d",n);
-		scanf("%d",&search_num);
+	while (1) {
+		CLOG_INFO("Input search num:0~%d", n);
+		scanf("%d", &search_num);
 		tree_search(root, root, search_num);
 	}
-
 
 	return 0;
 }
