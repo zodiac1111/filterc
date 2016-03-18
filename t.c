@@ -20,8 +20,7 @@ int main(void)
 
 	while ((read = getline(&line, &len, fp))!=-1) {
 		n++;
-		printf("Retrieved line of length %zu :\n", read);
-		printf("%s", line);
+		printf("%d [%zu]:%s",n, read,line);
 	}
 
 	fclose(fp);
