@@ -8,6 +8,23 @@
 int main(void)
 {
 	CLOG_INFO("start");
+	FILE * fp;
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	int n=0;
+	fp = fopen("simple.c", "r");
+	if (fp==NULL) {
+		return -1;
+	}
+
+	while ((read = getline(&line, &len, fp))!=-1) {
+		n++;
+		printf("Retrieved line of length %zu :\n", read);
+		printf("%s", line);
+	}
+
+	fclose(fp);
 	Node* root = new_node(1, 13);
 	Node* n2 = create_add_next(root, 5, 13);
 	Node* n3 = create_add_next(root, 13, 13);
