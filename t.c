@@ -2,6 +2,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <regex.h>
+#include<stdlib.h>
 //#define DEMO_FILE "simple.c"
 #define DEMO_FILE "huge.c"
 #include "t.h"
@@ -9,6 +10,7 @@
 #define DEBUG_SEARCH 0
 #define DEUBG_MAKE_TREE 0
 #define MAX_START_LEVEL 10 /// 预处理命令最大深度.
+char outputline[255] = { 0 };
 int main(void)
 {
 	CLOG_INFO("start");
@@ -45,7 +47,7 @@ int main(void)
 		return (1);
 	}
 	Node* cnode = root;
-	Node* hnode[10] = { NULL };
+	Node* hnode[MAX_START_LEVEL] = { NULL };
 	int level = 0;
 	while ((read = getline(&line, &len, fp))!=-1) {
 		n++;
@@ -62,7 +64,6 @@ int main(void)
 #endif
 			hnode[level] = cnode;
 			level++;
-			if(level>)
 		}
 		ret_regexec = regexec(&regex_else, line, 0, NULL, 0);
 		if (!ret_regexec) {
@@ -168,7 +169,9 @@ void tree_search(Node* curr, Node* pre, int q)
 	CLOG_INFO("Pre=[%d %d]", pre->min, pre->max);
 #endif
 	if (curr->min<q&&q<curr->max) {
-		CLOG_WARN("%d", curr->min);
+		//CLOG_WARN("%d", curr->min);
+		sprintf(outputline, "sed \'%dp\' %s", curr->min,DEMO_FILE);
+		system(outputline);
 		if (curr->child!=NULL) {
 #if DEBUG_SEARCH
 			CLOG_INFO("child");
