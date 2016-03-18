@@ -2,9 +2,11 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <regex.h>
-#include<stdlib.h>
-//#define DEMO_FILE "simple.c"
-#define DEMO_FILE "huge.c"
+#include <stdlib.h>
+#define TEST_DIR "test/"
+//#define DEMO_FILE TEST_DIR"simple.c"
+//#define DEMO_FILE TEST_DIR"huge.c"
+#define DEMO_FILE TEST_DIR"SA-1100.h"
 #include "t.h"
 #define DEMO_SEARCH 11
 #define DEBUG_SEARCH 0
@@ -109,11 +111,16 @@ int main(void)
 #endif
 	CLOG_INFO("search");
 	CLOG_WARN("start search %d", DEMO_SEARCH);
-	tree_search(root, root, DEMO_SEARCH);
+	//tree_search(root, root, DEMO_SEARCH);
 	while (1) {
 		CLOG_INFO("Input search num:0~%d", n);
-		scanf("%d", &search_num);
-		tree_search(root, root, search_num);
+		int a = scanf("%d", &search_num);
+		if (a==1) {
+			tree_search(root, root, search_num);
+		} else {
+			CLOG_WARN("Input Error");
+			return -2;
+		}
 	}
 
 	return 0;
@@ -170,7 +177,8 @@ void tree_search(Node* curr, Node* pre, int q)
 #endif
 	if (curr->min<q&&q<curr->max) {
 		//CLOG_WARN("%d", curr->min);
-		sprintf(outputline, "sed \'%dp\' %s", curr->min,DEMO_FILE);
+		//sprintf(outputline, "sed -n \'%dp\' %s", curr->min,DEMO_FILE);
+		sprintf(outputline, "echo -n \"%d\t\" ; sed \'%dq;d\' %s", curr->min, curr->min, DEMO_FILE);
 		system(outputline);
 		if (curr->child!=NULL) {
 #if DEBUG_SEARCH
