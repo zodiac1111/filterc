@@ -41,12 +41,12 @@ int main(void)
 		CLOG_ERR("Could not compile regex\n");
 		exit(1);
 	}
-	Node* s_if=root;
-	Node* cnode=root;
-	Node* hnode[10]={NULL};
-	Node* s_else=root;
-	Node* s_end=root;
-	int level=0;
+	Node* s_if = root;
+	Node* cnode = root;
+	Node* hnode[10] = { NULL };
+	Node* s_else = root;
+	Node* s_end = root;
+	int level = 0;
 	while ((read = getline(&line, &len, fp))!=-1) {
 		n++;
 		//printf("%d [%zu]:	%s",n, read,line);
@@ -54,21 +54,21 @@ int main(void)
 		reti = regexec(&regex_if, line, 0, NULL, 0);
 		if (!reti) {
 			CLOG_INFO("找到if %d, \"%s\"", n, line);
-			cnode=create_add_child(cnode, n, 0);
-			hnode[level]=cnode;
+			cnode = create_add_child(cnode, n, 0);
+			hnode[level] = cnode;
 			level++;
 		}
 		reti = regexec(&regex_else, line, 0, NULL, 0);
 		if (!reti) {
 			CLOG_INFO("找到else %d, \"%s\"", n, line);
-			cnode=create_add_next(cnode, n, 0);
+			cnode = create_add_next(cnode, n, 0);
 		}
 		reti = regexec(&regex_endif, line, 0, NULL, 0);
 		if (!reti) {
 			CLOG_INFO("找到endif %d, \"%s\"", n, line);
-			s_else=create_add_next(cnode, n, 0);
+			s_else = create_add_next(cnode, n, 0);
 			level--;
-			cnode=hnode[level];
+			cnode = hnode[level];
 
 		}
 	}
@@ -174,6 +174,10 @@ Node* create_add_next(Node* head, int min, int max)
  */
 Node* add_child(Node* parent, Node* child)
 {
+	if (parent==NULL) {
+		parent = child;
+		return child;
+	}
 	while (parent->child!=NULL) {
 		parent = parent->child;
 	}
@@ -189,6 +193,10 @@ Node* add_child(Node* parent, Node* child)
  */
 Node* add_append(Node* root, Node* last)
 {
+	if (root==NULL) {
+		root = last;
+		return last;
+	}
 	while (root->next!=NULL) {
 		root = root->next;
 	}
