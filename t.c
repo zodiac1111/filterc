@@ -1,6 +1,7 @@
 #include <string.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <regex.h>
 
 #include "t.h"
 
@@ -12,19 +13,69 @@ int main(void)
 	char * line = NULL;
 	size_t len = 0;
 	ssize_t read;
-	int n=0;
+	int n = 0;
+	char get[200] = { 0 };
+	int r = 0;
+	int reti;
 	fp = fopen("simple.c", "r");
 	if (fp==NULL) {
 		return -1;
 	}
-
+	Node* root = new_node(0, 0);
+	regex_t regex_if;
+	regex_t regex_else;
+	regex_t regex_endif;
+	/* Compile regular expression */
+	reti = regcomp(&regex_if, "\\s*#\\s*if.*$", 0);
+	if (reti) {
+		CLOG_ERR("Could not compile regex\n");
+		exit(1);
+	}
+	reti = regcomp(&regex_else, "\\s*#\\s*el.*$", 0);
+	if (reti) {
+		CLOG_ERR("Could not compile regex\n");
+		exit(1);
+	}
+	reti = regcomp(&regex_endif, "\\s*#\\s*endif.*$", 0);
+	if (reti) {
+		CLOG_ERR("Could not compile regex\n");
+		exit(1);
+	}
+	Node* s_if=root;
+	Node* cnode=root;
+	Node* hnode[10]={NULL};
+	Node* s_else=root;
+	Node* s_end=root;
+	int level=0;
 	while ((read = getline(&line, &len, fp))!=-1) {
 		n++;
-		printf("%d [%zu]:%s",n, read,line);
+		//printf("%d [%zu]:	%s",n, read,line);
+		/* Execute regular expression */
+		reti = regexec(&regex_if, line, 0, NULL, 0);
+		if (!reti) {
+			CLOG_INFO("找到if %d, \"%s\"", n, line);
+			cnode=create_add_child(cnode, n, 0);
+			hnode[level]=cnode;
+			level++;
+		}
+		reti = regexec(&regex_else, line, 0, NULL, 0);
+		if (!reti) {
+			CLOG_INFO("找到else %d, \"%s\"", n, line);
+			cnode=create_add_next(cnode, n, 0);
+		}
+		reti = regexec(&regex_endif, line, 0, NULL, 0);
+		if (!reti) {
+			CLOG_INFO("找到endif %d, \"%s\"", n, line);
+			s_else=create_add_next(cnode, n, 0);
+			level--;
+			cnode=hnode[level];
+
+		}
 	}
 
 	fclose(fp);
-	Node* root = new_node(1, 13);
+
+#if 0
 	Node* n2 = create_add_next(root, 5, 13);
 	Node* n3 = create_add_next(root, 13, 13);
 
@@ -33,9 +84,10 @@ int main(void)
 
 	Node* n31 = create_add_child(n2, 10, 12);
 	Node* n32 = create_add_next(n31, 12, 12);
+#endif
 	ptree(root);
 	CLOG_INFO("search");
-	tree_search(root, root, 11);
+	//tree_search(root, root, 11);
 	return 0;
 }
 /**
