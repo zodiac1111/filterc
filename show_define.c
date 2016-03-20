@@ -8,8 +8,7 @@
 #include <sys/stat.h>
 
 #include "def.h"
-#include "createtag.h"
-
+#include "show_define.h"
 
 #define TEST_DIR "test/"
 #define DEMO_FILE TEST_DIR"simple.c"
@@ -21,11 +20,36 @@
 #define DEUBG_MAKE_TREE 0
 #define MAKE_TAG_FILE 1 /// 打印数.
 #define MAX_START_LEVEL 10 /// 预处理命令最大深度.
-
-
+#define TRUE 1
+#define FALSE 0
 char outputline[255] = { 0 };
 FILE * fptag;
+
 int main(int argc, char* argv[])
+{
+	int ret;
+	char filename[MAX_FILE_PATH_LEN] = { 0 };
+	char tagfilename[MAX_FILE_PATH_LEN] = { 0 };
+	if (argc!=3) {
+		CLOG_ERR("./t <C source file> <line number>");
+		return -1;
+	}
+	sprintf(filename, "%s", argv[1]);
+	sprintf(tagfilename, "%s%s", argv[1], TAG_SUFFIX);
+	ret = create_tagfile(filename, tagfilename);
+	if (ret!=0) {
+		CLOG_ERR("create tag fail");
+		return -1;
+	}
+	int search_line=atoi(argv[2]);
+	ret = printnode(tagfilename, search_line);
+	if (ret!=0) {
+		CLOG_ERR("search tag fail");
+		return -1;
+	}
+	return 0;
+}
+int create_tagfile(char* sourcename, char* tagfile)
 {
 	//CLOG_INFO("start");
 	FILE * fp;
@@ -35,46 +59,39 @@ int main(int argc, char* argv[])
 	int n = 0;
 	int ret_regcomp;
 	int ret_regexec;
-	char filename[MAX_FILE_PATH_LEN] = { 0 };
-	char tagfilename[MAX_FILE_PATH_LEN] = { 0 };
 	struct stat sourcefile_stat;
 	struct stat tagfile_stat;
-	if (argc!=2) {
-		CLOG_ERR("./t <C srouce or head file>");
-		return -1;
-	}
-	sprintf(filename, "%s", argv[1]);
-	sprintf(tagfilename, "%s%s", argv[1], TAG_SUFFIX);
 	/// 打开源文件读取
-	fp = fopen(filename, "r");
+	fp = fopen(sourcename, "r");
 	if (fp==NULL) {
-		CLOG_ERR("open file fail");
+		CLOG_ERR("open file fail:%s",sourcename);
 		return -1;
 	}
-	if (access(tagfilename, F_OK)!=0) {
-		CLOG_WARN("tagfile: \'%s\' is not exist,create it.", tagfilename);
+	if (access(tagfile, F_OK)!=0) {
+		//CLOG_WARN("tagfile: \'%s\' is not exist,create it.", tagfilename);
 	} else {
-		if (stat(filename, &sourcefile_stat)!=0) {
-			CLOG_ERR("Get %s stat FAIL", filename);
+		if (stat(sourcename, &sourcefile_stat)!=0) {
+			CLOG_ERR("Get %s stat FAIL", sourcename);
 			return -2;
 		}
-		if (stat(tagfilename, &tagfile_stat)!=0) {
-			CLOG_ERR("Get %s stat FAIL", tagfilename);
+		if (stat(tagfile, &tagfile_stat)!=0) {
+			CLOG_ERR("Get %s stat FAIL", tagfile);
 			return -2;
 		}
 		///CLOG_INFO("source vs tag: %ld vs %ld",sourcefile_stat.st_mtime,tagfile_stat.st_mtime);
 		if (sourcefile_stat.st_mtime>=tagfile_stat.st_mtime) {
-			CLOG_WARN("Update tag file.(%ld>%ld)"
-				, sourcefile_stat.st_mtime, tagfile_stat.st_mtime);
+			//CLOG_WARN("Update tag file.(%ld>%ld)"
+			//	, sourcefile_stat.st_mtime, tagfile_stat.st_mtime);
 		} else {
-			CLOG_INFO("Tag file (%s) is newest,skip", tagfilename);
+			//CLOG_INFO("Tag file (%s) is newest,skip", tagfilename);
 			return 0;
 		}
 	}
 
 	/// 打开tag文件写
-	fptag = fopen(tagfilename, "w+");
+	fptag = fopen(tagfile, "w+");
 	if (fptag==NULL) {
+		CLOG_ERR("open tagsfile to write FAIL %s",tagfile);
 		return -1;
 	}
 
@@ -87,17 +104,17 @@ int main(int argc, char* argv[])
 	ret_regcomp = regcomp(&regex_if, "\\s*#\\s*if.*$", 0);
 	if (ret_regcomp) {
 		CLOG_ERR("Could not compile regex\n");
-		return (1);
+		return -2;
 	}
 	ret_regcomp = regcomp(&regex_else, "\\s*#\\s*el.*$", 0);
 	if (ret_regcomp) {
 		CLOG_ERR("Could not compile regex\n");
-		return (1);
+		return -3;
 	}
 	ret_regcomp = regcomp(&regex_endif, "\\s*#\\s*endif.*$", 0);
 	if (ret_regcomp) {
 		CLOG_ERR("Could not compile regex\n");
-		return (1);
+		return -4;
 	}
 	Node* cnode = root;
 	Node* hnode[MAX_START_LEVEL] = { NULL };
@@ -178,6 +195,47 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+int printnode(char* tagfile, int taget_number)
+{
+	int Firstline=TRUE;
+	FILE * fp;
+	char * line = NULL;
+	size_t len = 0;
+	ssize_t read_size;
+	int ret;
+	int min = 0;
+	int max = 0;
+	fp = fopen(tagfile, "r");
+	if (fp==NULL) {
+		CLOG_ERR("open file fail");
+		return -1;
+	}
+	while ((read_size = getline(&line, &len, fp))!=-1) {
+		ret = sscanf(line, "%d,%d", &min, &max);
+		if (ret!=2) {
+			continue;
+		}
+		if (min==0&&max==0) {
+			continue;
+		}
+		if ((min<taget_number)
+			&&(max>taget_number)) {
+			if(!Firstline){
+				printf(",");
+			}else{
+				Firstline=FALSE;
+			}
+			printf("%d", min);
+			continue;
+		}
+		if (min>taget_number) {
+			break;
+		}
+	}
+	fclose(fp);
+	return 0;
+}
+
 /**
  * 填充最大值
  * @param link

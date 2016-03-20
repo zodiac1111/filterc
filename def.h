@@ -31,5 +31,6 @@
 		,__FILE__,__FUNCTION__,__LINE__ , ##__VA_ARGS__)
 #  define CLOG_ERR(fmt, ...) \
 		printf("E"CL_RED"(%s:%s)[%d]:"_COLOR fmt "\r\n"\
-		,__FILE__,__FUNCTION__,__LINE__ , ##__VA_ARGS__)
+		,__FILE__,__FUNCTION__,__LINE__ , ##__VA_ARGS__);\
+		perror("")
 #endif /* DEF_H_ */

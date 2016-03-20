@@ -18,4 +18,6 @@ Node* create_add_child(Node* parent, int min, int max);
 void tree_search(Node* root, Node* pre, int q);
 void ptree(Node* node);
 void fill_max(Node* link,int max);
+int create_tagfile(char* sourcename, char* tagfilename);
+int printnode(char* tagfile, int taget_number);
 #endif
