@@ -4,13 +4,14 @@
 #include <regex.h>
 #include <stdlib.h>
 #define TEST_DIR "test/"
-//#define DEMO_FILE TEST_DIR"simple.c"
+#define DEMO_FILE TEST_DIR"simple.c"
 //#define DEMO_FILE TEST_DIR"huge.c"
-#define DEMO_FILE TEST_DIR"SA-1100.h"
+//#define DEMO_FILE TEST_DIR"SA-1100.h"
 #include "t.h"
 #define DEMO_SEARCH 11
 #define DEBUG_SEARCH 0
 #define DEUBG_MAKE_TREE 0
+#define MAKE_TAG_FILE 1 /// 打印数.
 #define MAX_START_LEVEL 10 /// 预处理命令最大深度.
 char outputline[255] = { 0 };
 int main(void)
@@ -106,7 +107,7 @@ int main(void)
 	Node* n32 = create_add_next(n31, 12, 12);
 #endif
 	CLOG_WARN("打印树");
-#if DEUBG_MAKE_TREE
+#if DEUBG_MAKE_TREE ||1
 	ptree(root);
 #endif
 	CLOG_INFO("search");
@@ -151,8 +152,12 @@ void make_tree()
 void ptree(Node* node)
 {
 	if (node!=NULL) {
+#if MAKE_TAG_FILE
+		printf("%d,%d\r\n", node->min,node->max);
+#else
 		CLOG_INFO("node(%p) %d %d Child=%p Next=%p"
 			, node, node->min, node->max, node->child, node->next);
+#endif
 		if (node->child!=NULL) {
 			//CLOG_INFO("node-child %d %d", node->child->min, node->child->max);
 			ptree(node->child);
