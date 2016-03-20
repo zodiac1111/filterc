@@ -4,13 +4,24 @@
 
 function main {
 	# 先获得结果列表,格式 文件名:行号:语句
-	commands=$(grep "$@" . -Rn | awk -F: '{print  "./show_define",$1,$2;}')
-	#echo "$commands"
+	commands=$(grep "$@" . -Rn --include=*.h --include=*.c | awk -F: '{print  "./show_define",$1,$2;}')
+	echo "$commands"
 	OLD_IFS="$IFS"
 	IFS="
 	"
 	for command in $commands ; do
-		echo "行号:$(eval "${command}")"
+		local exe=$(echo ${command}|awk '{printf $1}')
+		local sourcefile=$(echo ${command}|awk '{printf $2}')
+		local searchline=$(echo ${command}|awk '{printf $3}')
+		local lines=$(eval "${command}")
+		echo "在文件:${sourcefile}"
+		for line in $lines ; do
+			#echo "line=$line"
+			sed -n "${line}p" "${sourcefile}"
+		done
+		sed -n "${searchline}p" "${sourcefile}"
+		echo $exe
+		#exit
 	done
 	IFS="$OLD_IFS"
 }
