@@ -10,8 +10,7 @@ function main {
 	IFS="
 	"
 	for command in $commands ; do
-		lines=$(eval "${command}")
-		#echo "行号:$lines"
+		echo "行号:$(eval "${command}")"
 	done
 	IFS="$OLD_IFS"
 }
