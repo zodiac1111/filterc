@@ -3,7 +3,8 @@ show_define:show_define.c
 	gcc show_define.c -o show_define -Wall -g
 
 clean:
-	rm -f createtag printnode
+	rm -f  show_define
 
-.PHONY : all createtag printnode
+
+.PHONY : all  show_define
 
