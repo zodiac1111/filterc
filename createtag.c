@@ -3,41 +3,76 @@
 #include <stdio.h>
 #include <regex.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
+#include "def.h"
+#include "createtag.h"
+
+
 #define TEST_DIR "test/"
 #define DEMO_FILE TEST_DIR"simple.c"
 //#define DEMO_FILE TEST_DIR"huge.c"
 //#define DEMO_FILE TEST_DIR"SA-1100.h"
-#include "t.h"
+
 #define DEMO_SEARCH 11
 #define DEBUG_SEARCH 0
 #define DEUBG_MAKE_TREE 0
 #define MAKE_TAG_FILE 1 /// 打印数.
 #define MAX_START_LEVEL 10 /// 预处理命令最大深度.
-#define TAG_SUFFIX ".preprocess_tags"
+
+
 char outputline[255] = { 0 };
 FILE * fptag;
 int main(int argc, char* argv[])
 {
-	CLOG_INFO("start");
+	//CLOG_INFO("start");
 	FILE * fp;
 	char * line = NULL;
 	size_t len = 0;
-	ssize_t read;
+	ssize_t read_size;
 	int n = 0;
 	int ret_regcomp;
 	int ret_regexec;
-	char filename[1024] = { 0 };
-	char tagfilename[1024] = { 0 };
+	char filename[MAX_FILE_PATH_LEN] = { 0 };
+	char tagfilename[MAX_FILE_PATH_LEN] = { 0 };
+	struct stat sourcefile_stat;
+	struct stat tagfile_stat;
 	if (argc!=2) {
 		CLOG_ERR("./t <C srouce or head file>");
 		return -1;
 	}
 	sprintf(filename, "%s", argv[1]);
 	sprintf(tagfilename, "%s%s", argv[1], TAG_SUFFIX);
+	/// 打开源文件读取
 	fp = fopen(filename, "r");
 	if (fp==NULL) {
+		CLOG_ERR("open file fail");
 		return -1;
 	}
+	if (access(tagfilename, F_OK)!=0) {
+		CLOG_WARN("tagfile: \'%s\' is not exist,create it.", tagfilename);
+	} else {
+		if (stat(filename, &sourcefile_stat)!=0) {
+			CLOG_ERR("Get %s stat FAIL", filename);
+			return -2;
+		}
+		if (stat(tagfilename, &tagfile_stat)!=0) {
+			CLOG_ERR("Get %s stat FAIL", tagfilename);
+			return -2;
+		}
+		///CLOG_INFO("source vs tag: %ld vs %ld",sourcefile_stat.st_mtime,tagfile_stat.st_mtime);
+		if (sourcefile_stat.st_mtime>=tagfile_stat.st_mtime) {
+			CLOG_WARN("Update tag file.(%ld>%ld)"
+				, sourcefile_stat.st_mtime, tagfile_stat.st_mtime);
+		} else {
+			CLOG_INFO("Tag file (%s) is newest,skip", tagfilename);
+			return 0;
+		}
+	}
+
+	/// 打开tag文件写
 	fptag = fopen(tagfilename, "w+");
 	if (fptag==NULL) {
 		return -1;
@@ -67,7 +102,7 @@ int main(int argc, char* argv[])
 	Node* cnode = root;
 	Node* hnode[MAX_START_LEVEL] = { NULL };
 	int level = 0;
-	while ((read = getline(&line, &len, fp))!=-1) {
+	while ((read_size = getline(&line, &len, fp))!=-1) {
 		n++;
 		//printf("%d [%zu]:	%s",n, read,line);
 		/* Execute regular expression */
@@ -121,7 +156,7 @@ int main(int argc, char* argv[])
 	Node* n31 = create_add_child(n2, 10, 12);
 	Node* n32 = create_add_next(n31, 12, 12);
 #endif
-	CLOG_WARN("打印树");
+	//CLOG_WARN("打印树");
 #if DEUBG_MAKE_TREE ||1
 	ptree(root);
 	fclose(fptag);
