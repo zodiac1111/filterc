@@ -52,6 +52,7 @@ void mian(void)
 	int c;
 #   else
 
+
 #   else
 
 #   else
