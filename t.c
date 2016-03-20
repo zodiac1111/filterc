@@ -13,7 +13,9 @@
 #define DEUBG_MAKE_TREE 0
 #define MAKE_TAG_FILE 1 /// 打印数.
 #define MAX_START_LEVEL 10 /// 预处理命令最大深度.
+#define TAG_SUFFIX ".preprocess_tags"
 char outputline[255] = { 0 };
+FILE * fptag;
 int main(void)
 {
 	CLOG_INFO("start");
@@ -25,6 +27,7 @@ int main(void)
 	int ret_regcomp;
 	int ret_regexec;
 	fp = fopen(DEMO_FILE, "r");
+	fptag = fopen(DEMO_FILE TAG_SUFFIX, "w+");
 	if (fp==NULL) {
 		return -1;
 	}
@@ -109,6 +112,7 @@ int main(void)
 	CLOG_WARN("打印树");
 #if DEUBG_MAKE_TREE ||1
 	ptree(root);
+	fclose(fptag);
 #endif
 	CLOG_INFO("search");
 	CLOG_WARN("start search %d", DEMO_SEARCH);
@@ -153,7 +157,7 @@ void ptree(Node* node)
 {
 	if (node!=NULL) {
 #if MAKE_TAG_FILE
-		printf("%d,%d\r\n", node->min,node->max);
+		fprintf(fptag,"%d,%d\r\n", node->min,node->max);
 #else
 		CLOG_INFO("node(%p) %d %d Child=%p Next=%p"
 			, node, node->min, node->max, node->child, node->next);
