@@ -1,4 +1,5 @@
 #include "tc1.h"
+
 void mian(void)
 {
 	var_a=2;
