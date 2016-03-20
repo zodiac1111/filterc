@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 	char filename[MAX_FILE_PATH_LEN] = { 0 };
 	char tagfilename[MAX_FILE_PATH_LEN] = { 0 };
 	if (argc!=3) {
-		CLOG_ERR("./t <C source file> <line number>");
+		CLOG_ERR("Usage: ./t <C source file> <line number>");
 		return -1;
 	}
 	sprintf(filename, "%s", argv[1]);
