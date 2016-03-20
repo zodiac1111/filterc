@@ -1,5 +1,5 @@
 all:
-	gcc t.c -o t -Wall -g
+	gcc createtag.c -o createtag -Wall -g
 
 
 
