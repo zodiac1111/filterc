@@ -16,7 +16,7 @@
 #define TAG_SUFFIX ".preprocess_tags"
 char outputline[255] = { 0 };
 FILE * fptag;
-int main(void)
+int main(int argc, char* argv[])
 {
 	CLOG_INFO("start");
 	FILE * fp;
@@ -26,11 +26,23 @@ int main(void)
 	int n = 0;
 	int ret_regcomp;
 	int ret_regexec;
-	fp = fopen(DEMO_FILE, "r");
-	fptag = fopen(DEMO_FILE TAG_SUFFIX, "w+");
+	char filename[1024] = { 0 };
+	char tagfilename[1024] = { 0 };
+	if (argc!=2) {
+		CLOG_ERR("./t <C srouce or head file>");
+		return -1;
+	}
+	sprintf(filename, "%s", argv[1]);
+	sprintf(tagfilename, "%s%s", argv[1], TAG_SUFFIX);
+	fp = fopen(filename, "r");
 	if (fp==NULL) {
 		return -1;
 	}
+	fptag = fopen(tagfilename, "w+");
+	if (fptag==NULL) {
+		return -1;
+	}
+
 	Node* root = new_node(0, 0);
 	regex_t regex_if;
 	regex_t regex_else;
@@ -114,6 +126,7 @@ int main(void)
 	ptree(root);
 	fclose(fptag);
 #endif
+	return 0;
 	CLOG_INFO("search");
 	CLOG_WARN("start search %d", DEMO_SEARCH);
 	//tree_search(root, root, DEMO_SEARCH);
@@ -157,7 +170,7 @@ void ptree(Node* node)
 {
 	if (node!=NULL) {
 #if MAKE_TAG_FILE
-		fprintf(fptag,"%d,%d\r\n", node->min,node->max);
+		fprintf(fptag, "%d,%d\r\n", node->min, node->max);
 #else
 		CLOG_INFO("node(%p) %d %d Child=%p Next=%p"
 			, node, node->min, node->max, node->child, node->next);
