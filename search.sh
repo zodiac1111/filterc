@@ -1,8 +1,21 @@
 #!/usr/bin/env bash
 
+#set -x
+
 function main {
-	echo "paramt"
+	# 先获得结果列表,格式 文件名:行号:语句
+	commands=$(grep "$@" . -Rn | awk -F: '{print  "./show_define",$1,$2;}')
+	#echo "$commands"
+	OLD_IFS="$IFS"
+	IFS="
+	"
+	for command in $commands ; do
+		lines=$(eval "${command}")
+		#echo "行号:$lines"
+	done
+	IFS="$OLD_IFS"
 }
+
 
 
 # tty color define
