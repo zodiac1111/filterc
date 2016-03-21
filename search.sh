@@ -33,7 +33,7 @@ function main {
 	IFS="
 	"
 	# 先获得结果列表,格式 文件名:行号:语句
-	commands=$(grep "$1" . -Rn --include=*.h --include=*.c | awk -F: '{print  "./show_define",$1,$2;}')
+	commands=$(grep -w "$1" . -Rn --include=*.h --include=*.c | awk -F: '{print  "./show_define",$1,$2;}')
 	# echo "$commands"
 	i=0;
 	# total=${#commands[@]} 总计数貌似不可用
@@ -54,7 +54,9 @@ function main {
 			if [ ${PRINT_LINE_NO} -eq 1 ] ;then
 				echo -en "${line}\t: "
 			fi
+			echo -en "${CL_PURP}"
 			sed -n "${line}p" "${sourcefile}"
+			echo -en "${CL_END}"
 		done
 		if [ ${PRINT_LINE_NO} -eq 1 ] ;then
 			echo -en "${CL_RED}${searchline}${CL_END}\t: "
