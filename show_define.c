@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 	}
 	sprintf(filename, "%s", argv[1]);
 	sprintf(tagfilename, "%s/%s%s", TAG_DIR_PREFIX, argv[1], TAG_SUFFIX);
-	CLOG_INFO("%s", tagfilename);
+	//CLOG_INFO("%s", tagfilename);
 	ret = create_tagfile(filename, tagfilename);
 	if (ret!=0) {
 		CLOG_ERR("create tag fail");
