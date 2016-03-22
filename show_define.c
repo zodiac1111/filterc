@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <libgen.h>
 
 #include "def.h"
 #include "show_define.h"
@@ -32,16 +33,18 @@ int main(int argc, char* argv[])
 	char tagfilename[MAX_FILE_PATH_LEN] = { 0 };
 	if (argc!=3) {
 		CLOG_ERR("Usage: ./t <C source file> <line number>");
+		CLOG_ERR("or use search <c tag> to call this program.");
 		return -1;
 	}
 	sprintf(filename, "%s", argv[1]);
-	sprintf(tagfilename, "%s%s", argv[1], TAG_SUFFIX);
+	sprintf(tagfilename, "%s/%s%s", TAG_DIR_PREFIX, argv[1], TAG_SUFFIX);
+	CLOG_INFO("%s", tagfilename);
 	ret = create_tagfile(filename, tagfilename);
 	if (ret!=0) {
 		CLOG_ERR("create tag fail");
 		return -1;
 	}
-	int search_line=atoi(argv[2]);
+	int search_line = atoi(argv[2]);
 	ret = printnode(tagfilename, search_line);
 	if (ret!=0) {
 		CLOG_ERR("search tag fail");
@@ -61,14 +64,25 @@ int create_tagfile(char* sourcename, char* tagfile)
 	int ret_regexec;
 	struct stat sourcefile_stat;
 	struct stat tagfile_stat;
+	char mkfiletree_command[1024];
+	char tag_dir_name[1024];
 	/// 打开源文件读取
 	fp = fopen(sourcename, "r");
 	if (fp==NULL) {
-		CLOG_ERR("open file fail:%s",sourcename);
+		CLOG_ERR("open file fail:%s", sourcename);
 		return -1;
 	}
 	if (access(tagfile, F_OK)!=0) {
+		/// 如果tag文件不存在,则跳过比较,接下来会创建此文件.
 		//CLOG_WARN("tagfile: \'%s\' is not exist,create it.", tagfilename);
+		strcpy(tag_dir_name, tagfile);
+		char * tagdir = dirname(tag_dir_name);
+		sprintf(mkfiletree_command, "mkdir -p %s", tagdir);
+		if (system(mkfiletree_command)!=0) {
+			CLOG_ERR("create %s for %s .command =%s "
+				, tag_dir_name, tagfile, mkfiletree_command);
+			return -2;
+		}
 	} else {
 		if (stat(sourcename, &sourcefile_stat)!=0) {
 			CLOG_ERR("Get %s stat FAIL", sourcename);
@@ -88,10 +102,11 @@ int create_tagfile(char* sourcename, char* tagfile)
 		}
 	}
 
-	/// 打开tag文件写
+	/// 创建tag文件写
+
 	fptag = fopen(tagfile, "w+");
 	if (fptag==NULL) {
-		CLOG_ERR("open tagsfile to write FAIL %s",tagfile);
+		CLOG_ERR("open tagsfile to write FAIL %s", tagfile);
 		return -1;
 	}
 
@@ -197,7 +212,7 @@ int create_tagfile(char* sourcename, char* tagfile)
 }
 int printnode(char* tagfile, int taget_number)
 {
-	int Firstline=TRUE;
+	int Firstline = TRUE;
 	FILE * fp;
 	char * line = NULL;
 	size_t len = 0;
@@ -220,10 +235,10 @@ int printnode(char* tagfile, int taget_number)
 		}
 		if ((min<taget_number)
 			&&(max>taget_number)) {
-			if(!Firstline){
+			if (!Firstline) {
 				printf(",");
-			}else{
-				Firstline=FALSE;
+			} else {
+				Firstline = FALSE;
 			}
 			printf("%d", min);
 			continue;

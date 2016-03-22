@@ -10,7 +10,7 @@
 #define MAX_FILE_PATH_LEN 1024
 #define TAG_SUFFIX ".preprocess_tags"
 
-
+#define TAG_DIR_PREFIX "tags"
 
 
 #  define CL_RED "\033[31m"
